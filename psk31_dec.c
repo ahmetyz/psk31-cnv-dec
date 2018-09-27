@@ -331,7 +331,6 @@ void cnv_dec(unsigned int encoded[], unsigned int len, unsigned int *decoded[])
     unsigned int min_metric = 255;
     unsigned int min_metric2 = 255;
     unsigned int min_state = 0;
-    unsigned int min_state2 = 0;
     for(int state=0;state<NUM_STATES;state++)
     {
       unsigned int metric = acc_metric[state][t];
@@ -340,16 +339,32 @@ void cnv_dec(unsigned int encoded[], unsigned int len, unsigned int *decoded[])
         min_state = state;
         min_metric = metric;
       }
-      else if(min_metric < 255 && metric == min_metric)
-      {
-        min_state2 = state;
-        min_metric2 = metric;
-      }
     }
-    if(min_state%2 == 0 && acc_metric[(min_state+1)%NUM_STATES][t] == min_metric) printf("%d",min_metric);
     traceback[t] = min_state;
     if(t>0)
+    {
       _decoded[t-1] = state_trans[traceback[t-1]][traceback[t]];
+      if(_decoded[t-1] > 1)
+      {
+         printf("here0 %d %d\n",min_state,t);
+         unsigned int past_min_state = traceback[t-1];
+         unsigned int min_state2 = (past_min_state+1)%NUM_STATES;
+         unsigned int min_metric2 = acc_metric[min_state2][t-1];
+         printf("%d %d %d\n",min_state2,min_metric2,t);
+         unsigned int decoded2;
+         if(past_min_state%2 == 0 && min_metric2 == acc_metric[past_min_state][t-1])
+         {
+           puts("here1");
+           decoded2 = state_trans[min_state2][traceback[t]];
+           if(decoded2 < 2)
+           {
+             _decoded[t-1] = decoded2;
+             printf("*");
+           }
+         }
+      }
+    }
+
   }
 
   /*for(int t=1;t<len-1;t++)
