@@ -326,51 +326,42 @@ void cnv_dec(unsigned int encoded[], unsigned int len, unsigned int *decoded[])
     }
   }
 
-  for(int t=0;t<len;t++)
+  // get the min_state for the last input
+  unsigned int min_metric = 255;
+  for(int to_state=0;to_state<NUM_STATES;to_state++)
   {
-    unsigned int min_metric = 255;
-    unsigned int min_metric2 = 255;
     unsigned int min_state = 0;
-    for(int state=0;state<NUM_STATES;state++)
+    unsigned int metric = acc_metric[to_state][len-1];
+    if(metric < min_metric)
     {
-      unsigned int metric = acc_metric[state][t];
-      if(metric < min_metric)
-      {
-        min_state = state;
-        min_metric = metric;
-      }
+      traceback[len-1] = to_state;
+      min_metric = metric;
     }
-    traceback[t] = min_state;
-    if(t>0)
-    {
-      _decoded[t-1] = state_trans[traceback[t-1]][traceback[t]];
-      if(_decoded[t-1] > 1)
-      {
-         printf("here0 %d %d\n",min_state,t);
-         unsigned int past_min_state = traceback[t-1];
-         unsigned int min_state2 = (past_min_state+1)%NUM_STATES;
-         unsigned int min_metric2 = acc_metric[min_state2][t-1];
-         printf("%d %d %d\n",min_state2,min_metric2,t);
-         unsigned int decoded2;
-         if(past_min_state%2 == 0 && min_metric2 == acc_metric[past_min_state][t-1])
-         {
-           puts("here1");
-           decoded2 = state_trans[min_state2][traceback[t]];
-           if(decoded2 < 2)
-           {
-             _decoded[t-1] = decoded2;
-             printf("*");
-           }
-         }
-      }
-    }
-
   }
 
-  /*for(int t=1;t<len-1;t++)
+  // go backwards from last input - 1 to the beginning
+  for(int t=len-2;t>=0;t--)
+  {
+    unsigned int min_metric = acc_metric[0][t];
+    unsigned int min_state = 0;
+    unsigned int from_state = traceback[t+1];
+    for(int to_state=0;to_state<NUM_STATES;to_state++)
+    {
+      unsigned int metric = acc_metric[to_state][t];
+      unsigned int next_state = state_trans[to_state][from_state];
+      if(metric < min_metric && next_state != 3)
+      {
+        min_metric = metric;
+        min_state = to_state;
+      }
+      traceback[t] = min_state;
+    }
+  }
+
+  for(int t=1;t<len-1;t++)
   {
     _decoded[t-1] = state_trans[traceback[t-1]][traceback[t]];
-  }*/
+  }
 
   free(traceback);
 
