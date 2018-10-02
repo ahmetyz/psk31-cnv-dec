@@ -330,7 +330,6 @@ void cnv_dec(unsigned int encoded[], unsigned int len, unsigned int *decoded[])
   unsigned int min_metric = 255;
   for(int to_state=0;to_state<NUM_STATES;to_state++)
   {
-    unsigned int min_state = 0;
     unsigned int metric = acc_metric[to_state][len-1];
     if(metric < min_metric)
     {
@@ -358,16 +357,21 @@ void cnv_dec(unsigned int encoded[], unsigned int len, unsigned int *decoded[])
     }
   }
 
+  // we had to have started in the zero state
+  // that is how the encoder is initialized
+  _decoded[0] = state_trans[0][traceback[0]];
   for(int t=1;t<len-1;t++)
   {
-    _decoded[t-1] = state_trans[traceback[t-1]][traceback[t]];
+    _decoded[t] = state_trans[traceback[t-1]][traceback[t]];
   }
 
   free(traceback);
 
+#ifdef DEBUG_PRINT
   print_acc_metrics(acc_metric,len);
   print_traceback(traceback,len);
   print_decoded(_decoded,len);
+#endif
 }
 
 void print_acc_metrics(unsigned int acc_metric[NUM_STATES][1024], int len)

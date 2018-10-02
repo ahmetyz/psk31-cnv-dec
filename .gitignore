@@ -1,2 +1,4 @@
 tags
 *.o
+*.dSYM
+psk31_dec
